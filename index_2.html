@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#03122F" />
+<title>Project CR7 — Fitness Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #03122F; --deep: #19305C; --slate: #413B61;
+    --mauve: #AE7DAC; --cream: #F3DADF; --coral: #F1916D;
+    --text: #F3DADF; --muted: #9BA6C9;
+  }
+  * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--ink); color: var(--text); font-family: 'Barlow', system-ui, sans-serif; max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  header {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(3,18,47,0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 20px 10px;
+    border-bottom: 1px solid var(--slate);
+  }
+  @media (display-mode: standalone) {
+    header { padding-top: max(calc(env(safe-area-inset-top, 0px) + 10px), 58px); }
+  }
+  .head-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .logo { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 27px; letter-spacing: 0.5px; line-height: 1; }
+  .logo span { color: var(--coral); }
+  .date { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .streak-box { text-align: center; background: var(--deep); border: 1px solid var(--slate); border-radius: 14px; padding: 6px 12px; }
+  .streak-num { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 22px; color: var(--coral); line-height: 1; }
+  .streak-lbl { font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+  .main-tabs { display: flex; gap: 8px; margin-top: 10px; }
+  .mtab { flex: 1; padding: 11px 0; border-radius: 12px; border: 1px solid var(--slate); cursor: pointer; font-family: 'Barlow Condensed'; font-weight: 800; font-size: 19px; letter-spacing: 0.6px; background: var(--deep); color: var(--muted); transition: all 0.2s; }
+  .mtab.on { background: var(--coral); border-color: var(--coral); color: var(--ink); }
+  .mtab small { font-size: 11px; font-weight: 600; margin-left: 5px; opacity: 0.85; }
+  .sub-tabs { display: flex; gap: 8px; margin-top: 7px; }
+  .stab { flex: 1; padding: 7px 0; border-radius: 10px; border: none; cursor: pointer; font-family: 'Barlow Condensed'; font-weight: 600; font-size: 14px; letter-spacing: 0.6px; background: transparent; color: var(--muted); border: 1px dashed var(--slate); transition: all 0.2s; }
+  .stab.on { background: var(--mauve); border: 1px solid var(--mauve); color: var(--ink); font-weight: 800; }
+  .stab small { font-size: 10px; margin-left: 4px; }
+  .hero { display: flex; align-items: center; gap: 18px; margin: 16px 20px 0; background: var(--deep); border: 1px solid var(--slate); border-radius: 18px; padding: 16px; }
+  .hero-info { flex: 1; }
+  .hero-name { font-size: 15px; font-weight: 600; }
+  .hero-focus { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .week { display: flex; gap: 6px; }
+  .wd { width: 26px; height: 26px; border-radius: 9px; background: var(--slate); border: 1px solid var(--slate); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .wd.done { background: var(--coral); color: var(--ink); border-color: var(--coral); }
+  .wd.today { border: 2px solid var(--mauve); }
+  .day-row { display: flex; gap: 6px; padding: 14px 20px 0; overflow-x: auto; }
+  .day-pill { flex: 1; min-width: 50px; padding: 8px 0; border-radius: 11px; border: 1px solid var(--slate); background: var(--deep); color: var(--muted); text-align: center; cursor: pointer; transition: all 0.18s; }
+  .day-pill .d1 { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 15px; }
+  .day-pill .d2 { font-size: 9px; letter-spacing: 0.4px; margin-top: 1px; }
+  .day-pill.sel { background: var(--coral); border-color: var(--coral); color: var(--ink); }
+  .day-pill.is-today:not(.sel) { border-color: var(--mauve); color: var(--mauve); }
+  .list { padding: 8px 20px 0; }
+  .row { display: flex; align-items: flex-start; gap: 14px; background: var(--deep); border: 1px solid var(--slate); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s; }
+  .row:active { transform: scale(0.985); }
+  .row.done { background: rgba(241,145,109,0.10); border-color: var(--coral); opacity: 0.92; }
+  .row.readonly { cursor: default; opacity: 0.75; }
+  .cb { width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0; border: 2px solid var(--muted); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: var(--ink); transition: all 0.15s; margin-top: 1px; }
+  .row.done .cb { background: var(--coral); border-color: var(--coral); }
+  .row.meal.done .cb { background: var(--mauve); border-color: var(--mauve); }
+  .row.meal.done { background: rgba(174,125,172,0.10); border-color: var(--mauve); }
+  .row-main { flex: 1; }
+  .row-title { font-size: 15px; font-weight: 500; }
+  .row.done .row-title { text-decoration: line-through; text-decoration-color: var(--muted); }
+  .meal-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .meal-name { font-size: 15px; font-weight: 600; }
+  .meal-kcal { font-size: 12px; color: var(--mauve); font-weight: 600; }
+  .meal-time { font-size: 11px; color: var(--coral); margin-top: 1px; }
+  .meal-desc { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .kcal-card { background: var(--deep); border: 1px solid var(--slate); border-radius: 16px; padding: 16px; margin: 16px 20px 12px; }
+  .kcal-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .kcal-title { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 18px; letter-spacing: 0.5px; }
+  .kcal-total { font-size: 13px; color: var(--mauve); font-weight: 600; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-lbl { width: 86px; font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .bar-track { flex: 1; height: 18px; background: var(--slate); border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+  .bar-val { width: 44px; font-size: 12px; text-align: right; font-weight: 600; flex-shrink: 0; }
+  .macro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .macro { background: var(--slate); border-radius: 10px; padding: 10px; text-align: center; }
+  .macro b { display: block; font-family: 'Barlow Condensed'; font-weight: 800; font-size: 20px; color: var(--cream); }
+  .macro span { font-size: 10px; color: var(--muted); letter-spacing: 0.5px; }
+  .cta { display: block; width: calc(100% - 40px); margin: 8px 20px 0; padding: 16px 0; border-radius: 14px; border: none; font-family: 'Barlow Condensed'; font-weight: 800; font-size: 20px; letter-spacing: 1px; background: var(--slate); color: var(--muted); cursor: default; transition: all 0.25s; }
+  .cta.ready { background: var(--coral); color: var(--ink); cursor: pointer; }
+  .cta.finished { background: var(--mauve); color: var(--ink); }
+  .note { margin: 12px 20px; background: var(--deep); border: 1px solid var(--slate); border-radius: 14px; padding: 12px 16px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .preview-note { margin: 8px 20px 0; font-size: 12px; color: var(--mauve); }
+  .g-card { background: var(--deep); border: 1px solid var(--slate); border-radius: 16px; padding: 16px; margin: 0 20px 12px; }
+  .g-title { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 19px; letter-spacing: 0.5px; color: var(--coral); margin-bottom: 10px; }
+  .g-item { display: flex; gap: 10px; margin-bottom: 9px; font-size: 13px; line-height: 1.55; }
+  .g-item b { color: var(--cream); font-weight: 600; }
+  .g-item .dot { color: var(--mauve); flex-shrink: 0; }
+  .g-item span.txt { color: var(--muted); }
+  .add-bar { display: flex; gap: 8px; margin: 16px 20px 12px; }
+  .add-bar input { flex: 1; background: var(--deep); border: 1px solid var(--slate); border-radius: 12px; padding: 12px 14px; color: var(--cream); font-family: 'Barlow'; font-size: 15px; outline: none; }
+  .add-bar input::placeholder { color: var(--muted); }
+  .add-bar button { background: var(--coral); border: none; border-radius: 12px; padding: 0 18px; font-family: 'Barlow Condensed'; font-weight: 800; font-size: 17px; color: var(--ink); cursor: pointer; }
+  .sugg-group { margin-bottom: 12px; }
+  .sugg-lbl { font-size: 12px; color: var(--mauve); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 7px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { background: var(--slate); border: 1px solid var(--slate); border-radius: 20px; padding: 7px 13px; font-family: 'Barlow'; font-size: 13px; color: var(--cream); cursor: pointer; transition: all 0.15s; }
+  .chip.added { background: transparent; border-color: var(--mauve); color: var(--mauve); cursor: default; }
+  .sugg-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .sugg-actions button { flex: 1; background: var(--slate); border: none; border-radius: 11px; padding: 10px 0; font-family: 'Barlow Condensed'; font-weight: 800; font-size: 14px; letter-spacing: 0.4px; color: var(--cream); cursor: pointer; }
+  .groc-row { display: flex; align-items: center; gap: 12px; background: var(--deep); border: 1px solid var(--slate); border-radius: 12px; padding: 11px 14px; margin-bottom: 8px; }
+  .groc-row .cb { width: 24px; height: 24px; margin-top: 0; cursor: pointer; }
+  .groc-row.done .cb { background: var(--mauve); border-color: var(--mauve); }
+  .groc-name { flex: 1; font-size: 15px; cursor: pointer; }
+  .groc-row.done .groc-name { text-decoration: line-through; color: var(--muted); }
+  .groc-del { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }
+  .empty-msg { text-align: center; color: var(--muted); font-size: 13px; padding: 14px; }
+  .sec-title { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 17px; letter-spacing: 0.6px; color: var(--muted); margin: 14px 20px 0; }
+  .overlay { position: fixed; inset: 0; background: rgba(3,18,47,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 50; animation: pop 0.4s ease; }
+  .overlay h2 { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 34px; color: var(--coral); margin-top: 8px; }
+  .overlay p { color: var(--muted); font-size: 14px; margin-top: 6px; text-align: center; padding: 0 40px; }
+  @keyframes pop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+  .ring-txt { font-family: 'Barlow Condensed'; font-weight: 800; font-size: 30px; fill: var(--cream); }
+  .ring-sub { font-size: 11px; fill: var(--muted); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-top">
+    <div>
+      <div class="logo">PROJECT<span> CR7</span></div>
+      <div class="date" id="dateLbl"></div>
+    </div>
+    <div class="streak-box">
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-lbl">DAY STREAK</div>
+    </div>
+  </div>
+  <div class="main-tabs">
+    <button class="mtab on" id="tabW">WORKOUT<small id="wCount"></small></button>
+    <button class="mtab" id="tabD">DIET<small id="dCount"></small></button>
+  </div>
+  <div class="sub-tabs">
+    <button class="stab" id="tabG">GUIDE</button>
+    <button class="stab" id="tabL">GROCERY LIST<small id="lCount"></small></button>
+  </div>
+</header>
+
+<div id="workoutPane">
+  <div class="hero">
+    <svg width="118" height="118" viewBox="0 0 118 118" role="img" aria-label="Daily progress ring">
+      <circle cx="59" cy="59" r="50" fill="none" stroke="#413B61" stroke-width="10"/>
+      <circle id="ring" cx="59" cy="59" r="50" fill="none" stroke="#F1916D" stroke-width="10"
+        stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"
+        transform="rotate(-90 59 59)" style="transition: stroke-dashoffset 0.5s ease, stroke 0.4s;"/>
+      <text x="59" y="56" text-anchor="middle" class="ring-txt" id="pctLbl">0%</text>
+      <text x="59" y="74" text-anchor="middle" class="ring-sub">today</text>
+    </svg>
+    <div class="hero-info">
+      <div class="hero-name" id="planName"></div>
+      <div class="hero-focus" id="planFocus"></div>
+      <div class="week" id="weekDots"></div>
+    </div>
+  </div>
+  <div class="day-row" id="dayRowW"></div>
+  <div class="preview-note hidden" id="previewNoteW">Viewing another day — check-offs work on today only.</div>
+  <div class="list" id="workoutList"></div>
+  <button class="cta" id="completeBtn"></button>
+  <div class="note">⏱ <b>Rest between sets:</b> 2–3 min on heavy compounds (squat, bench, deadlift, press) · 60–90 sec on everything else.</div>
+</div>
+
+<div id="dietPane" class="hidden">
+  <div class="kcal-card">
+    <div class="kcal-top">
+      <div class="kcal-title">CALORIES TODAY</div>
+      <div class="kcal-total"><span id="kcalEaten">0</span> / 2,250 kcal</div>
+    </div>
+    <div id="kcalBars"></div>
+    <div class="macro-grid">
+      <div class="macro"><b>~140 g</b><span>PROTEIN</span></div>
+      <div class="macro"><b>~230 g</b><span>CARBS</span></div>
+      <div class="macro"><b>~65 g</b><span>FATS</span></div>
+    </div>
+  </div>
+  <div class="day-row" id="dayRowD"></div>
+  <div class="preview-note hidden" id="previewNoteD">Viewing another day's menu — check-offs work on today only.</div>
+  <div class="list" id="mealList"></div>
+  <div class="note">🍽 Menu rotates through the week — tap the days above to see what's coming. 🫓 Chapathi at dinner only. 💧 3–3.5 L water daily.</div>
+</div>
+
+<div id="listPane" class="hidden">
+  <div class="add-bar">
+    <input type="text" id="grocInput" placeholder="Add grocery item…" autocomplete="off" />
+    <button id="grocAdd">ADD</button>
+  </div>
+  <div class="sec-title">MY LIST</div>
+  <div class="list" id="grocList"></div>
+  <div class="g-card" style="margin-top:14px">
+    <div class="g-title">SUGGESTIONS — THIS WEEK'S MEALS</div>
+    <div id="suggGroups"></div>
+    <div class="sugg-actions">
+      <button id="suggAll">+ ADD EVERYTHING</button>
+      <button id="grocClear">CLEAR BOUGHT</button>
+    </div>
+  </div>
+</div>
+
+<div id="guidePane" class="hidden">
+  <div class="g-card" style="margin-top:16px">
+    <div class="g-title">FRUITS — GERMAN SUPERMARKET LIST</div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Bananas</b> — your pre-workout fuel, cheapest energy in the store. Buy weekly.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Apples</b> — cheap all year, perfect mid-morning snack.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Oranges / mandarins</b> — vitamin C for recovery, great in winter.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Blueberries & strawberries</b> — fresh in summer; otherwise frozen berries (TK-Beeren) — same nutrition, half the price.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Plums (Zwetschgen)</b> — cheap and everywhere Aug–Sep.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt">Aim for <b>2 fruits a day</b>: banana around training + one other.</span></div>
+  </div>
+  <div class="g-card">
+    <div class="g-title">PRE-WORKOUT ROUTINE</div>
+    <div class="g-item"><span class="dot">1</span><span class="txt"><b>45–60 min before:</b> banana + 1 tbsp peanut butter (or boiled chana).</span></div>
+    <div class="g-item"><span class="dot">2</span><span class="txt"><b>Hydrate:</b> 500 ml water in the hour before training.</span></div>
+    <div class="g-item"><span class="dot">3</span><span class="txt"><b>Optional:</b> black coffee 30 min before — skip after 4 pm.</span></div>
+    <div class="g-item"><span class="dot">4</span><span class="txt"><b>Warm-up (5 min):</b> brisk treadmill walk + arm circles, then 2 light warm-up sets of your first exercise.</span></div>
+  </div>
+  <div class="g-card">
+    <div class="g-title">POST-WORKOUT ROUTINE</div>
+    <div class="g-item"><span class="dot">1</span><span class="txt"><b>Within 1 hour:</b> whey shake — or 250 g Magerquark / Skyr with honey + banana (~30 g protein, €1 anywhere).</span></div>
+    <div class="g-item"><span class="dot">2</span><span class="txt"><b>Rehydrate:</b> 500–750 ml water.</span></div>
+    <div class="g-item"><span class="dot">3</span><span class="txt"><b>Stretch 5 min:</b> the muscles you trained, holds of 20–30 sec.</span></div>
+    <div class="g-item"><span class="dot">4</span><span class="txt"><b>Proper meal within 2 hours</b> — your chapathi dinner.</span></div>
+  </div>
+  <div class="g-card">
+    <div class="g-title">GROUND CIRCUIT — NO EQUIPMENT</div>
+    <div class="g-item"><span class="dot">●</span><span class="txt">For home, travel, or busy gym days. <b>3 rounds</b>, 45 sec rest between rounds:</span></div>
+    <div class="g-item"><span class="dot">1</span><span class="txt"><b>Push-ups</b> — max reps (knees down is fine at the start)</span></div>
+    <div class="g-item"><span class="dot">2</span><span class="txt"><b>Bodyweight squats</b> — 15 reps</span></div>
+    <div class="g-item"><span class="dot">3</span><span class="txt"><b>Lunges</b> — 10 / leg</span></div>
+    <div class="g-item"><span class="dot">4</span><span class="txt"><b>Glute bridge</b> — 15 reps</span></div>
+    <div class="g-item"><span class="dot">5</span><span class="txt"><b>Mountain climbers</b> — 30 sec</span></div>
+    <div class="g-item"><span class="dot">6</span><span class="txt"><b>Plank</b> — 45 sec · <b>Superman hold</b> — 20 sec</span></div>
+  </div>
+  <div class="g-card">
+    <div class="g-title">REST & RECOVERY RULES</div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Between sets:</b> 2–3 min heavy compounds, 60–90 sec isolation moves.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Same muscle:</b> at least 48 hrs before training it hard again.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Sleep:</b> 7–8 hrs — muscle is built in bed, not in the gym.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Thursday:</b> active rest. <b>Sunday:</b> full rest, no guilt.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Every 6–8 weeks:</b> one easy week with lighter weights.</span></div>
+    <div class="g-item"><span class="dot">●</span><span class="txt"><b>Supplements:</b> whey (optional) · creatine 3–5 g daily · check vitamin D with a doctor.</span></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="overlay">
+  <div style="font-size:64px">🏆</div>
+  <h2 id="overlayTitle"></h2>
+  <p>Siuuu! Consistency builds the physique. See you tomorrow.</p>
+</div>
+
+<script>
+const WORKOUTS = {
+  1: { name: "Push day", focus: "Chest · shoulders · triceps", items: ["Bench press — 4 × 8","Incline dumbbell press — 3 × 10","Shoulder press — 3 × 10","Lateral raises — 3 × 15","Triceps pushdown — 3 × 12","Incline walk — 10 min"] },
+  2: { name: "Pull day", focus: "Back · biceps", items: ["Lat pulldown — 4 × 10","Seated row — 3 × 10","Dumbbell row — 3 × 12","Face pulls — 3 × 15","Biceps curls — 3 × 12","Hammer curls — 3 × 12"] },
+  3: { name: "Legs + core", focus: "Quads · hamstrings · abs", items: ["Squats — 4 × 8","Leg press — 3 × 10","Romanian deadlift — 3 × 10","Calf raises — 3 × 15","Plank — 3 × 45 sec","Glute bridge — 3 × 15","Dead bug — 3 × 10 / side","Lying leg raises — 3 × 12"] },
+  4: { name: "Active rest", focus: "Recovery", items: ["Brisk walk or cycling — 30–40 min","Full-body stretching — 10 min","Drink 3L+ water today"] },
+  5: { name: "Upper body", focus: "Full upper + arms", items: ["Incline bench — 3 × 10","Pull-ups (assisted ok) — 3 × max","Overhead press — 3 × 10","Cable rows — 3 × 12","Arms superset — 3 × 12"] },
+  6: { name: "Cardio + core", focus: "Fat loss focus", items: ["Intervals: 1 min fast / 2 min easy — 20 min","Push-ups — 3 × max","Mountain climbers — 3 × 30 sec","Crunches — 3 × 15","Russian twists — 3 × 20","Side plank — 3 × 30 sec / side"] },
+  0: { name: "Rest day", focus: "Muscles grow on rest days", items: ["Rested, ate well, slept 7–8 hrs"] }
+};
+
+const MENU_A = [
+  { id:"bf", time:"8:00", name:"Breakfast", kcal:480, p:"30 g", desc:"Berry oats: cook 60 g oats in milk, top with frozen berries + honey · 2 boiled eggs" },
+  { id:"mm", time:"11:00", name:"Mid-morning", kcal:220, p:"14 g", desc:"Apple + 150 g Magerquark with cinnamon" },
+  { id:"lu", time:"13:30", name:"Lunch", kcal:620, p:"40 g", desc:"One-pan chicken rice: fry 150 g chicken strips, add cooked rice + frozen veg mix + curry powder (15 min)" },
+  { id:"pre", time:"45 min before gym", name:"Pre-workout", kcal:200, p:"fuel", desc:"Banana + 1 tbsp peanut butter · 500 ml water" },
+  { id:"post", time:"within 1 hr after", name:"Post-workout", kcal:160, p:"28 g", desc:"Whey shake — or Skyr with honey" },
+  { id:"din", time:"20:30", name:"Dinner", kcal:570, p:"32 g", desc:"2 fresh chapathi + quick dal tadka + cucumber-tomato salad" }
+];
+const MENU_B = [
+  { id:"bf", time:"8:00", name:"Breakfast", kcal:480, p:"28 g", desc:"Masala omelette (3 eggs, onion, tomato, chilli) + 1 toast + few walnuts" },
+  { id:"mm", time:"11:00", name:"Mid-morning", kcal:220, p:"10 g", desc:"Orange or mandarins + handful roasted chana" },
+  { id:"lu", time:"13:30", name:"Lunch", kcal:620, p:"38 g", desc:"Rajma bowl: canned kidney beans simmered in onion-tomato masala + rice (20 min, canned = no soaking)" },
+  { id:"pre", time:"45 min before gym", name:"Pre-workout", kcal:200, p:"fuel", desc:"Banana + 3 dates · 500 ml water" },
+  { id:"post", time:"within 1 hr after", name:"Post-workout", kcal:160, p:"28 g", desc:"Whey shake — or 250 g Magerquark + banana" },
+  { id:"din", time:"20:30", name:"Dinner", kcal:570, p:"36 g", desc:"2 fresh chapathi + pan-fried salmon (8 min) + sautéed frozen spinach with garlic" }
+];
+const MENU_C = [
+  { id:"bf", time:"8:00", name:"Breakfast", kcal:480, p:"32 g", desc:"Skyr power bowl: 250 g Skyr + sliced banana + 3 tbsp oats + walnuts + honey (zero cooking)" },
+  { id:"mm", time:"11:00", name:"Mid-morning", kcal:220, p:"8 g", desc:"Apple or pear + small handful peanuts" },
+  { id:"lu", time:"13:30", name:"Lunch", kcal:620, p:"40 g", desc:"Chicken wrap: tortilla + 150 g chicken strips + salad + yoghurt-garlic sauce (10 min)" },
+  { id:"pre", time:"45 min before gym", name:"Pre-workout", kcal:200, p:"fuel", desc:"Banana + 1 tbsp peanut butter · 500 ml water" },
+  { id:"post", time:"within 1 hr after", name:"Post-workout", kcal:160, p:"28 g", desc:"Whey shake — or Skyr with honey" },
+  { id:"din", time:"20:30", name:"Dinner", kcal:570, p:"30 g", desc:"2 fresh chapathi + chana masala from canned chickpeas (15 min) + salad" }
+];
+const MENU_D = [
+  { id:"bf", time:"9:00", name:"Breakfast", kcal:480, p:"26 g", desc:"Veg poha or upma + 2 boiled eggs — relaxed Sunday cooking" },
+  { id:"mm", time:"11:30", name:"Mid-morning", kcal:220, p:"8 g", desc:"Any fruit + nuts" },
+  { id:"lu", time:"13:30", name:"Lunch", kcal:620, p:"42 g", desc:"Grill a big batch of chicken + rice + salad — eat one portion, box the rest for Mon/Tue lunches (meal prep!)" },
+  { id:"pre", time:"afternoon", name:"Snack", kcal:200, p:"6 g", desc:"Rest day — fruit or a small chai + roasted chana if hungry" },
+  { id:"post", time:"evening", name:"Protein snack", kcal:160, p:"28 g", desc:"Skyr or Magerquark with frozen berries" },
+  { id:"din", time:"20:30", name:"Dinner", kcal:570, p:"32 g", desc:"2 fresh chapathi + dal + sautéed veggies" }
+];
+const MENUS = { 1: MENU_A, 4: MENU_A, 2: MENU_B, 5: MENU_B, 3: MENU_C, 6: MENU_C, 0: MENU_D };
+
+const SUGG = [
+  { g: "PROTEIN", items: ["Chicken breast (1 kg)","Salmon fillets (2)","Eggs (10+)","Magerquark (2 × 500 g)","Skyr (2)","Whey protein","Milk (2 L)","Natural yoghurt"] },
+  { g: "GRAINS & PULSES", items: ["Oats (500 g)","Rice (1 kg)","Atta / chapathi flour","Red lentils (dal)","Canned kidney beans","Canned chickpeas","Tortilla wraps","Toast bread"] },
+  { g: "FRUIT & VEG", items: ["Bananas (bunch)","Apples","Oranges","Frozen berries","Frozen veg mix","Frozen spinach","Onions","Tomatoes","Cucumber","Salad mix","Garlic"] },
+  { g: "EXTRAS", items: ["Peanut butter","Mixed nuts","Walnuts","Roasted chana","Dates","Honey","Curry powder","Cinnamon","Poha / semolina"] }
+];
+
+const DAYS = [
+  { dow:1, s:"MON", l:"Push" }, { dow:2, s:"TUE", l:"Pull" }, { dow:3, s:"WED", l:"Legs" },
+  { dow:4, s:"THU", l:"Rest" }, { dow:5, s:"FRI", l:"Upper" }, { dow:6, s:"SAT", l:"Cardio" }, { dow:0, s:"SUN", l:"Off" }
+];
+
+function dateKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+
+let store = { history:{}, streak:{ count:0, lastDate:null }, grocery:[] };
+try { const raw = localStorage.getItem("fitTracker"); if (raw) { const p = JSON.parse(raw); store = Object.assign(store, p); if(!store.grocery) store.grocery = []; } } catch(e){}
+function save(){ try { localStorage.setItem("fitTracker", JSON.stringify(store)); } catch(e){} }
+
+const today = new Date();
+const tKey = dateKey(today);
+const todayDow = today.getDay();
+let selDow = todayDow;
+
+function log(){ if(!store.history[tKey]) store.history[tKey] = { workout:[], meals:[], complete:false }; return store.history[tKey]; }
+const $ = id => document.getElementById(id);
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+$("dateLbl").textContent = today.toLocaleDateString("en-GB",{ weekday:"long", day:"numeric", month:"long" }) + " · v5";
+
+function dayPills(containerId){
+  $(containerId).innerHTML = DAYS.map(d =>
+    '<div class="day-pill'+(d.dow===selDow?" sel":"")+(d.dow===todayDow?" is-today":"")+'" onclick="pickDay('+d.dow+')">'+
+      '<div class="d1">'+d.s+'</div><div class="d2">'+d.l.toUpperCase()+'</div></div>').join("");
+}
+
+function render(){
+  const L = log();
+  const plan = WORKOUTS[selDow];
+  const isToday = selDow === todayDow;
+  const wTotal = WORKOUTS[todayDow].items.length;
+  const todayMenu = MENUS[todayDow];
+  const viewMenu = MENUS[selDow];
+  const mDone = L.meals.length;
+  const pct = Math.round(((L.workout.length + mDone) / (wTotal + todayMenu.length)) * 100);
+
+  $("streakNum").textContent = store.streak.count;
+  $("planName").textContent = WORKOUTS[todayDow].name;
+  $("planFocus").textContent = WORKOUTS[todayDow].focus;
+  $("pctLbl").textContent = pct + "%";
+  const C = 314.16;
+  $("ring").style.strokeDashoffset = C - (C * pct / 100);
+  $("ring").style.stroke = L.complete ? "#AE7DAC" : "#F1916D";
+  $("wCount").textContent = L.workout.length + "/" + wTotal;
+  $("dCount").textContent = mDone + "/" + todayMenu.length;
+  const toBuy = store.grocery.filter(g => !g.d).length;
+  $("lCount").textContent = toBuy > 0 ? String(toBuy) : "";
+
+  let dots = "";
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const k = dateKey(d);
+    const done = store.history[k] && store.history[k].complete;
+    const cls = "wd" + (done ? " done" : "") + (k === tKey ? " today" : "");
+    dots += '<div class="'+cls+'">'+(done ? "✓" : "SMTWTFS"[d.getDay()])+'</div>';
+  }
+  $("weekDots").innerHTML = dots;
+
+  dayPills("dayRowW");
+  dayPills("dayRowD");
+  $("previewNoteW").classList.toggle("hidden", isToday);
+  $("previewNoteD").classList.toggle("hidden", isToday);
+
+  $("workoutList").innerHTML = plan.items.map((item,i) => {
+    const done = isToday && L.workout.includes(i);
+    return '<div class="row'+(done?" done":"")+(isToday?"":" readonly")+'" '+(isToday?'onclick="toggleW('+i+')"':'')+'>'+
+      '<div class="cb">'+(done?"✓":"")+'</div>'+
+      '<div class="row-main"><div class="row-title">'+item+'</div></div></div>';
+  }).join("");
+
+  const btn = $("completeBtn");
+  btn.classList.toggle("hidden", !isToday);
+  if (isToday) {
+    const canComplete = L.workout.length === wTotal && !L.complete;
+    btn.className = "cta" + (L.complete ? " finished" : canComplete ? " ready" : "");
+    btn.textContent = L.complete ? "✓ DAY COMPLETE — WELL DONE" : canComplete ? "MARK DAY COMPLETE" : "FINISH " + (wTotal - L.workout.length) + " MORE TO COMPLETE";
+  }
+
+  $("mealList").innerHTML = viewMenu.map(m => {
+    const done = isToday && L.meals.includes(m.id);
+    return '<div class="row meal'+(done?" done":"")+(isToday?"":" readonly")+'" '+(isToday?'onclick="toggleM(\''+m.id+'\')"':'')+'>'+
+      '<div class="cb">'+(done?"✓":"")+'</div>'+
+      '<div class="row-main">'+
+        '<div class="meal-head"><span class="meal-name">'+m.name+'</span><span class="meal-kcal">'+m.kcal+' kcal · '+m.p+'</span></div>'+
+        '<div class="meal-time">'+m.time+'</div>'+
+        '<div class="meal-desc">'+m.desc+'</div></div></div>';
+  }).join("");
+
+  const eaten = todayMenu.filter(m => L.meals.includes(m.id)).reduce((s,m)=>s+m.kcal,0);
+  $("kcalEaten").textContent = eaten.toLocaleString();
+  const maxK = Math.max.apply(null, todayMenu.map(m=>m.kcal));
+  $("kcalBars").innerHTML = todayMenu.map(m => {
+    const done = L.meals.includes(m.id);
+    return '<div class="bar-row">'+
+      '<div class="bar-lbl">'+m.name+'</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(m.kcal/maxK*100)+'%; background:'+(done?"#F1916D":"#413B61")+';"></div></div>'+
+      '<div class="bar-val" style="color:'+(done?"#F3DADF":"#9BA6C9")+'">'+m.kcal+'</div></div>';
+  }).join("");
+
+  renderGrocery();
+}
+
+function inList(name){ return store.grocery.some(g => g.n.toLowerCase() === name.toLowerCase()); }
+
+function renderGrocery(){
+  if (store.grocery.length === 0) {
+    $("grocList").innerHTML = '<div class="empty-msg">List is empty — type an item above, or tap the suggestions below.</div>';
+  } else {
+    $("grocList").innerHTML = store.grocery.map((g,i) =>
+      '<div class="groc-row'+(g.d?" done":"")+'">'+
+        '<div class="cb" onclick="toggleG('+i+')">'+(g.d?"✓":"")+'</div>'+
+        '<div class="groc-name" onclick="toggleG('+i+')">'+esc(g.n)+'</div>'+
+        '<button class="groc-del" onclick="delG('+i+')">✕</button></div>').join("");
+  }
+  $("suggGroups").innerHTML = SUGG.map((grp,gi) =>
+    '<div class="sugg-group"><div class="sugg-lbl">'+grp.g+'</div><div class="chips">'+
+    grp.items.map((it,ii) => {
+      const added = inList(it);
+      return '<button class="chip'+(added?" added":"")+'" '+(added?"":'onclick="addSugg('+gi+','+ii+')"')+'>'+(added?"✓ ":"+ ")+esc(it)+'</button>';
+    }).join("")+'</div></div>').join("");
+}
+
+function pickDay(d){ selDow = d; render(); }
+function toggleW(i){ const L = log(); const x = L.workout.indexOf(i); x >= 0 ? L.workout.splice(x,1) : L.workout.push(i); save(); render(); }
+function toggleM(id){ const L = log(); const x = L.meals.indexOf(id); x >= 0 ? L.meals.splice(x,1) : L.meals.push(id); save(); render(); }
+function toggleG(i){ store.grocery[i].d = !store.grocery[i].d; save(); render(); }
+function delG(i){ store.grocery.splice(i,1); save(); render(); }
+function addSugg(gi, ii){ const it = SUGG[gi].items[ii]; if (!inList(it)) { store.grocery.push({ n: it, d: false }); save(); render(); } }
+
+function addGroc(){
+  const v = $("grocInput").value.trim();
+  if (!v) return;
+  store.grocery.push({ n: v, d: false });
+  $("grocInput").value = "";
+  save(); render();
+}
+$("grocAdd").addEventListener("click", addGroc);
+$("grocInput").addEventListener("keydown", e => { if (e.key === "Enter") addGroc(); });
+$("suggAll").addEventListener("click", () => {
+  SUGG.forEach(grp => grp.items.forEach(it => { if (!inList(it)) store.grocery.push({ n: it, d: false }); }));
+  save(); render();
+});
+$("grocClear").addEventListener("click", () => { store.grocery = store.grocery.filter(g => !g.d); save(); render(); });
+
+$("completeBtn").addEventListener("click", () => {
+  const L = log();
+  if (L.complete || L.workout.length !== WORKOUTS[todayDow].items.length) return;
+  let count = 1;
+  if (store.streak.lastDate) {
+    const gap = daysBetween(store.streak.lastDate, tKey);
+    if (gap === 1) count = store.streak.count + 1;
+    else if (gap === 0) count = store.streak.count;
+  }
+  store.streak = { count, lastDate: tKey };
+  L.complete = true;
+  save();
+  $("overlayTitle").textContent = "DAY " + count + " DONE";
+  $("overlay").classList.remove("hidden");
+  setTimeout(() => $("overlay").classList.add("hidden"), 2800);
+  render();
+});
+$("overlay").addEventListener("click", () => $("overlay").classList.add("hidden"));
+
+function switchTab(name){
+  ["W","D","L","G"].forEach(t => $("tab"+t).classList.toggle("on", t===name));
+  $("workoutPane").classList.toggle("hidden", name!=="W");
+  $("dietPane").classList.toggle("hidden", name!=="D");
+  $("listPane").classList.toggle("hidden", name!=="L");
+  $("guidePane").classList.toggle("hidden", name!=="G");
+}
+$("tabW").addEventListener("click", () => switchTab("W"));
+$("tabD").addEventListener("click", () => switchTab("D"));
+$("tabL").addEventListener("click", () => switchTab("L"));
+$("tabG").addEventListener("click", () => switchTab("G"));
+
+render();
+</script>
+</body>
+</html>
